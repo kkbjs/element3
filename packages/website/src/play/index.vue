@@ -1,25 +1,69 @@
 <template>
-  <el-radio-group v-model="tabPosition" style="margin-bottom: 30px">
-    <el-radio-button label="top">top</el-radio-button>
-    <el-radio-button label="right">right</el-radio-button>
-    <el-radio-button label="bottom">bottom</el-radio-button>
-    <el-radio-button label="left">left</el-radio-button>
-  </el-radio-group>
-
-  <el-tabs :tab-position="tabPosition" style="height: 200px">
-    <el-tab-pane label="用户管理">用户管理</el-tab-pane>
-    <el-tab-pane label="配置管理">配置管理</el-tab-pane>
-    <el-tab-pane label="角色管理">角色管理</el-tab-pane>
-    <el-tab-pane label="定时任务补偿">定时任务补偿</el-tab-pane>
-  </el-tabs>
+  <el-tree :data="data" show-checkbox ref="tree"> </el-tree>
+  <el-button @click="onClick">点击获取ID=3的节点</el-button>
 </template>
 <script>
-import { defineComponent } from 'vue'
-export default defineComponent({
-  data() {
+import { useTree } from 'element3'
+export default {
+  setup() {
+    const { findOne } = useTree('tree')
+    const data = [
+      {
+        id: 1,
+        label: '一级 1',
+        children: [
+          {
+            id: 4,
+            label: '二级 1-1',
+            children: [
+              {
+                id: 9,
+                label: '三级 1-1-1'
+              },
+              {
+                id: 10,
+                label: '三级 1-1-2'
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 2,
+        label: '一级 2',
+        children: [
+          {
+            id: 5,
+            label: '二级 2-1'
+          },
+          {
+            id: 6,
+            label: '二级 2-2'
+          }
+        ]
+      },
+      {
+        id: 3,
+        label: '一级 3',
+        children: [
+          {
+            id: 7,
+            label: '二级 3-1'
+          },
+          {
+            id: 8,
+            label: '二级 3-2'
+          }
+        ]
+      }
+    ]
+    const onClick = () => {
+      console.log(findOne(3).appendChild({ id: 100, label: 'test' }))
+    }
     return {
-      tabPosition: 'top'
+      data,
+      onClick
     }
   }
-})
+}
 </script>

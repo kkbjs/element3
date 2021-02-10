@@ -46,7 +46,7 @@ import { ElNewTableColumn } from '../src/components/TableColumn'
 
 import { ElTag } from './components/Tag'
 import { ElProgress } from './components/Progress'
-import ElTree from '../packages/tree'
+import { ElTree } from './components/Tree'
 import ElPagination from '../packages/pagination'
 import { ElBadge } from './components/Badge'
 import { ElAvatar } from './components/Avatar'
@@ -98,6 +98,7 @@ import ElAutocomplete from '../packages/autocomplete'
 
 import { version } from '../package.json'
 import { setupGlobalOptions } from './composables/globalConfig'
+import { useTree } from './components/Tree/src/useTree'
 
 const components = [
   ElRow,
@@ -295,7 +296,8 @@ export {
   Msgbox,
   Notification,
   install,
-  setupGlobalOptions
+  setupGlobalOptions,
+  useTree
 }
 
 export default element3
