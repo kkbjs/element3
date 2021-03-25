@@ -171,8 +171,6 @@ export interface ElMessageBox {
 
 declare module '@vue/runtime-core' {
   export interface ComponentCustomProperties {
-    /** Show a message box */
-    $msgbox: ElMessageBox
     /** Show an alert message box */
     $alert: ElMessageBoxShortcutMethod
 

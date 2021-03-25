@@ -7,9 +7,9 @@ import {
   watch,
   toRefs
 } from 'vue'
+import { merge } from 'lodash-es'
 import PopupManager from '../../src/utils/popup/popup-manager'
 import getScrollBarWidth from '../../src/utils/scrollbar-width'
-import merge from '../../src/utils/merge'
 import { getStyle, addClass, removeClass, hasClass } from '../../src/utils/dom'
 
 let idSeed = 1
@@ -53,6 +53,7 @@ function usePopup(props) {
   const { visible, modal, modalAppendToBody, lockScroll, closeDelay } = toRefs(
     props
   )
+
   const opened = ref(false)
   const bodyPaddingRight = ref(null)
   const computedBodyPaddingRight = ref(0)
@@ -68,9 +69,8 @@ function usePopup(props) {
     if (!rendered.value) {
       rendered.value = true
     }
-
-    const props = merge({}, instance.proxy, options)
-
+    // instance.proxy, options)
+    const props = merge(instance.proxy, options)
     if (_closeTimer) {
       clearTimeout(_closeTimer)
       _closeTimer = 0
@@ -87,7 +87,7 @@ function usePopup(props) {
     }
   }
   const doOpen = (props) => {
-    if (instance.proxy.$isServer) return
+    // if (instance.proxy.$isServer) return
     if (_opening) return
     if (opened.value) return
     _opening = true
@@ -106,7 +106,7 @@ function usePopup(props) {
       PopupManager.openModal(
         _popupId,
         PopupManager.nextZIndex(),
-        modalAppendToBody.value ? undefined : dom,
+        modalAppendToBody?.value ? undefined : dom,
         props.modalClass,
         props.modalFade
       )

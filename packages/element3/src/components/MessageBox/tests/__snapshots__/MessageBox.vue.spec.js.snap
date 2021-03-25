@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[` 1`] = `
+<transition-stub>
+  <div
+    class="el-message-box__wrapper"
+    tabindex="-1"
+  >
+    <div
+      class="el-message-box"
+    >
+      <!--v-if-->
+      <div
+        class="el-message-box__content"
+      >
+        <div
+          class="el-message-box__container"
+        >
+          <!--v-if-->
+          <div
+            class="el-message-box__message"
+          >
+            
+            <p>
+              {}
+            </p>
+            
+          </div>
+        </div>
+        <div
+          class="el-message-box__input"
+          style="display: none;"
+        >
+          <div
+            class="el-input"
+          >
+            
+            <!--v-if-->
+            <input
+              class="el-input__inner"
+              placeholder=""
+              type="text"
+            />
+            <!--v-if-->
+            <!--v-if-->
+            <!-- 后置元素 -->
+            <!--v-if-->
+            
+          </div>
+          <div
+            class="el-message-box__errormsg"
+            style="visibility: hidden;"
+          />
+        </div>
+      </div>
+      <div
+        class="el-message-box__btns"
+      >
+        <button
+          class="el-button el-button--small"
+          style="display: none;"
+          type="button"
+        >
+          <!--v-if-->
+          <span>
+            
+            确定
+            
+          </span>
+        </button>
+        <button
+          class="el-button el-button--small el-button--primary"
+          type="button"
+        >
+          <!--v-if-->
+          <span>
+            
+            取消
+            
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</transition-stub>
+`;

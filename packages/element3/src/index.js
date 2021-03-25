@@ -57,7 +57,7 @@ import ElLoading from '../packages/loading'
 
 import { Message } from './components/Message'
 
-import { Msgbox } from '../packages/message-box'
+import { Msgbox } from './components/MessageBox'
 
 import { Notification } from './components/Notification'
 // Navigation

@@ -3,7 +3,7 @@
 模拟系统的消息提示框而实现的一套模态对话框组件，用于消息提示、确认消息和提交内容。
 
 :::tip
-从场景上说，MessageBox 的作用是美化系统自带的 `alert`、`confirm` 和 `prompt`，因此适合展示较为简单的内容。如果需要弹出较为复杂的内容，请使用 Dialog。
+`msgbox`、`alert`、`confirm` 和 `prompt`，因此适合展示较为简单的内容。如果需要弹出较为复杂的内容，请使用 Dialog。
 :::
 
 ### 消息提示
@@ -175,10 +175,15 @@
                 done()
               }
             }
-          }).then((action) => {
+          }).then(({action}) => {
             Message({
               type: 'info',
               message: 'action: ' + action
+            })
+          }).catch(() => {
+            Message({
+              type: 'info',
+              message: '已取消'
             })
           })
         }
@@ -217,7 +222,17 @@
             {
               dangerouslyUseHTMLString: true
             }
-          )
+          ).then(({action}) => {
+            Message({
+              type: 'info',
+              message: 'action: ' + action
+            })
+          }).catch(() => {
+            Message({
+              type: 'info',
+              message: '已取消'
+            })
+          })
         }
       }
     }
