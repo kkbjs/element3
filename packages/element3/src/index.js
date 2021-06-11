@@ -47,7 +47,7 @@ import { ElNewTableColumn } from '../src/components/TableColumn'
 import { ElTag } from './components/Tag'
 import { ElProgress } from './components/Progress'
 import ElTree from '../packages/tree'
-import ElPagination from '../packages/pagination'
+import { ElPagination } from './components/Pagination'
 import { ElBadge } from './components/Badge'
 import { ElAvatar } from './components/Avatar'
 // Notice
