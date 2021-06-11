@@ -88,9 +88,7 @@ export const useInput = (props, cxt, textarea) => {
   })
 
   const inputExceed = computed(() => {
-    return props.modelValue?.length >= Number(cxt.attrs.maxlength)
-      ? true
-      : false
+    return props.modelValue?.length > Number(cxt.attrs.maxlength)
   })
 
   const getInput = () =>
