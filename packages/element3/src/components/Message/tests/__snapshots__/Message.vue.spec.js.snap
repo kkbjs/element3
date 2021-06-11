@@ -1,19 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Message.vue snapshot 1`] = `
-<transition-stub>
-  <div
-    class="el-message"
-  >
-    <i
-      class="el-message__icon el-icon-undefined"
-    />
-    
-    <p
-      class="el-message__content"
-    />
-    
-    <!--v-if-->
-  </div>
-</transition-stub>
+<div
+  class="el-message"
+>
+  <i
+    class="el-message__icon el-icon-undefined"
+  />
+  
+  <p
+    class="el-message__content"
+  />
+  
+  <!--v-if-->
+</div>
 `;

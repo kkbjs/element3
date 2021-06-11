@@ -1,72 +1,50 @@
 <template>
-  <transition name="el-message-fade" @after-leave="handleAfterLeave" appear>
-    <div
-      v-show="isShow"
-      :class="[
-        'el-message',
-        isShowType ? `el-message--${type}` : '',
-        showClose ? 'is-closable' : '',
-        center ? 'is-center' : '',
-        customClass
-      ]"
-      :style="[positionStyle]"
-      @mouseenter="handleMouseenter"
-      @mouseleave="handleMouseleave"
-    >
-      <i v-if="iconClass" :class="iconClass"></i>
-      <i v-else :class="['el-message__icon', `el-icon-${type}`]"></i>
-      <slot>
-        <p
-          class="el-message__content"
-          v-if="dangerouslyUseHTMLString"
-          v-html="message"
-        ></p>
-        <p class="el-message__content" v-else>
-          {{ message }}
-        </p>
-      </slot>
-      <i
-        v-if="showClose"
-        class="el-message__closeBtn el-icon-close"
-        @click="handleClose"
-      ></i>
-    </div>
-  </transition>
+  <div
+    :style="positionStyle"
+    :class="[
+      'el-message',
+      isShowType ? `el-message--${type}` : '',
+      showClose ? 'is-closable' : '',
+      center ? 'is-center' : '',
+      customClass
+    ]"
+    @mouseenter="handleMouseenter"
+    @mouseleave="handleMouseleave"
+  >
+    <i v-if="iconClass" :class="iconClass"></i>
+    <i v-else :class="['el-message__icon', `el-icon-${type}`]"></i>
+    <slot>
+      <p
+        class="el-message__content"
+        v-if="dangerouslyUseHTMLString"
+        v-html="message"
+      ></p>
+      <p class="el-message__content" v-else>
+        {{ message }}
+      </p>
+    </slot>
+    <i
+      v-if="showClose"
+      class="el-message__closeBtn el-icon-close"
+      @click="handleClose"
+    ></i>
+  </div>
 </template>
-
 <script>
-import { getCurrentInstance, computed, ref } from 'vue'
+import { getCurrentInstance, computed, ref, onUpdated } from 'vue'
+import { props } from './props'
 export default {
-  props: {
-    message: {
-      type: [String, Object]
-    },
-    type: {
-      type: String,
-      defalut: 'info',
-      validator(val) {
-        return ['success', 'warning', 'info', 'error'].includes(val)
-      }
-    },
-    iconClass: String,
-    showClose: Boolean,
-    duration: Number,
-    center: Boolean,
-    customClass: String,
-    dangerouslyUseHTMLString: Boolean,
-    offset: Number
-  },
+  props,
   emits: ['close'],
   setup(props, { emit }) {
     const instance = getCurrentInstance()
 
-    const isShow = ref(true)
     // @public
-    const offsetVal = ref(props.offset)
+    const offsetTop = ref(props.offset)
 
     const isShowType = computed(() => props.type && !props.iconClass)
     const positionStyle = computed(() => ({
-      top: `${offsetVal.value}px`
+      top: `${offsetTop.value}px`
     }))
 
     let timer
@@ -79,13 +57,13 @@ export default {
     }
 
     function _close() {
-      clearTimeout(timer)
       emit('close', instance)
-      isShow.value = false
+      props.onClose && props.onClose(instance)
+      clearTimeout(timer)
     }
 
-    function handleAfterLeave() {
-      instance.vnode.el.parentElement?.removeChild(instance.vnode.el)
+    function handleAfterLeave(el) {
+      el.parentNode?.removeChild(el)
     }
 
     function handleClose() {
@@ -106,13 +84,11 @@ export default {
     }
 
     delayClose()
-
     return {
       close,
-      isShow,
       isShowType,
       positionStyle,
-      offsetVal,
+      offsetTop,
       handleClose,
       handleAfterLeave,
       handleMouseenter,
@@ -121,5 +97,3 @@ export default {
   }
 }
 </script>
-
-<style></style>

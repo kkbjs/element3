@@ -1,17 +1,16 @@
 import messageComponent from './Message.vue'
-import { createComponent } from '../../../composables/component'
-import { PopupManager } from '../../../utils/popup'
-import { isVNode } from 'vue'
+import { createPopupComponent } from '../../../composables/component'
+import { isVNode, render, nextTick } from 'vue'
 
-const instanceList = []
-
+const instances = []
+const target = 'body'
 export function Message(opts) {
   return createMessage(mergeOptions(opts))
 }
 
 Message.closeAll = () => {
-  instanceList.forEach((instance) => {
-    instance.proxy.close()
+  instances.forEach((instance) => {
+    instance.proxy.popup.close()
     removeInstance(instance)
   })
 }
@@ -23,28 +22,24 @@ Message.closeAll = () => {
 
 function createMessage(opts) {
   const instance = createMessageComponentByOpts(opts)
-  setZIndex(instance)
-  appendToBody(instance)
   addInstance(instance)
-  return instance.proxy
+  return instance
 }
 
 function createMessageComponentByOpts(opts) {
   if (isVNode(opts.message)) {
-    return createComponent(messageComponent, opts, () => opts.message)
+    return createPopupComponent(messageComponent, opts, () => opts.message)
   }
-  return createComponent(messageComponent, opts)
-}
-
-function setZIndex(instance) {
-  instance.vnode.el.style.zIndex = PopupManager.nextZIndex()
+  return createPopupComponent(messageComponent, opts)
 }
 
 function mergeOptions(opts, type = 'info') {
   const defaultOptions = {
+    target,
     duration: 4500,
     type,
-    offset: calculateVerticalOffset(opts.offset)
+    offset: calculateVerticalOffset(opts.offset),
+    transitionClass: 'el-message-fade'
   }
 
   const userOnClose = opts?.onClose
@@ -66,9 +61,8 @@ function mergeOptions(opts, type = 'info') {
 
 function calculateVerticalOffset(offset = 20) {
   let result = offset
-
-  instanceList.forEach((instance) => {
-    result += getNextElementInterval(instance)
+  instances.forEach((instance) => {
+    result += getNextRefInterval(instance)
   })
 
   return result
@@ -86,31 +80,44 @@ function updatePosition(closeInstance) {
 
   for (
     let index = currentInstanceIndex + 1;
-    index < instanceList.length;
+    index < instances.length;
     index++
   ) {
-    const instance = instanceList[index]
-    instance.proxy.offsetVal -= getNextElementInterval(closeInstance)
+    const instance = instances[index]
+    const instanceTop = getProxyElTop(instance)
+    const top = instanceTop - getNextElementInterval(closeInstance)
+
+    instance.proxy.setStyle({
+      top: top + 'px'
+    })
   }
+}
+
+function getNextRefInterval(instance) {
+  const INTERVAL_HEIGHT = 16
+  const target = instance.proxy.popup.$el
+  return target.offsetHeight + INTERVAL_HEIGHT
 }
 
 function getNextElementInterval(instance) {
   const INTERVAL_HEIGHT = 16
-  return instance.vnode.el.offsetHeight + INTERVAL_HEIGHT
+  const target = instance.proxy.$el
+  return target.offsetHeight + INTERVAL_HEIGHT
 }
 
 function addInstance(instance) {
-  instanceList.push(instance)
+  instances.push(instance)
 }
 
 function removeInstance(instance) {
-  instanceList.splice(getIndexByInstance(instance), 1)
+  instances.splice(getIndexByInstance(instance), 1)
 }
 
 function getIndexByInstance(instance) {
-  return instanceList.findIndex((i) => i.uid == instance.uid)
+  return instances.findIndex((i) => i.proxy.popup.$el == instance.proxy.$el)
 }
 
-function appendToBody(componentInstance) {
-  document.body.append(componentInstance.vnode.el)
+function getProxyElTop(instance) {
+  const { top } = instance.proxy.popup.$el.style
+  return top.replace(/px/, '')
 }

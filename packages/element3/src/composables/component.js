@@ -1,4 +1,5 @@
 import { h, render } from 'vue'
+import { PopupComponent } from '../utils/popupService/index'
 
 const MOUNT_COMPONENT_REF = 'el_component'
 const COMPONENT_CONTAINER_SYMBOL = Symbol('el_component_container')
@@ -13,6 +14,15 @@ export function createComponent(Component, props, children) {
   const container = document.createElement('div')
   vnode[COMPONENT_CONTAINER_SYMBOL] = container
   render(vnode, container)
+  return vnode.component
+}
+
+export function createPopupComponent(Component, props, children) {
+  const vnode = h(PopupComponent(Component, children), props)
+  const container = document.createElement('div')
+  vnode[COMPONENT_CONTAINER_SYMBOL] = container
+  render(vnode, container)
+
   return vnode.component
 }
 

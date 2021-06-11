@@ -6,6 +6,7 @@ import { expectHaveStyle } from '../../../../tests/helper'
 describe('Message.vue', () => {
   test('snapshot', () => {
     const wrapper = mount(Message)
+
     expect(wrapper.element).toMatchSnapshot()
   })
   test('message', () => {
@@ -17,7 +18,7 @@ describe('Message.vue', () => {
       }
     })
 
-    expect(wrapper.get('.el-message__content').text()).toContain(message)
+    expect(wrapper.html()).toContain(message)
   })
 
   test('message is vnode', () => {
@@ -29,9 +30,7 @@ describe('Message.vue', () => {
       }
     })
 
-    expect(wrapper.get('.el-message__content').html()).toContain(
-      '<p class="el-message__content">foo</p>'
-    )
+    expect(wrapper.html()).toContain('<p class="el-message__content">foo</p>')
   })
 
   describe('type', () => {
@@ -95,9 +94,9 @@ describe('Message.vue', () => {
         }
       })
 
-      const closeBtn = wrapper.get('.el-message__closeBtn')
+      const closeBtn = wrapper.find('.el-message__closeBtn')
       await closeBtn.trigger('click')
-      expect(wrapper.get('.el-message').isVisible()).toBe(false)
+      expect(wrapper.emitted('close')).toBeTruthy()
     })
 
     test('duration: message is closed when in 1000ms', async () => {
@@ -110,7 +109,8 @@ describe('Message.vue', () => {
       })
       jest.runTimersToTime(1000)
       await flushPromises()
-      expect(wrapper.get('.el-message').isVisible()).toBe(false)
+
+      expect(wrapper.emitted('close')).toBeTruthy()
     })
 
     test('should called onClose', () => {
@@ -129,12 +129,13 @@ describe('Message.vue', () => {
       expect(proxy.close).toBeTruthy()
     })
 
-    test('should close message when call close function in the componentInstance ', async () => {
+    test('should emit close  when call close function in the componentInstance ', async () => {
       const wrapper = mount(Message)
 
       wrapper.vm.close()
       await flushPromises()
-      expect(wrapper.get('.el-message').isVisible()).toBe(false)
+
+      expect(wrapper.emitted('close')).toBeTruthy()
     })
 
     test('should clear timeout', () => {
@@ -188,7 +189,8 @@ describe('Message.vue', () => {
   test('verticalOffset', () => {
     const wrapper = mount(Message, {
       props: {
-        offset: 50
+        offset: 50,
+        message: 'message'
       }
     })
 
@@ -207,7 +209,8 @@ describe('Message.vue', () => {
     expectHaveStyle(wrapper.get('.el-message'), {
       top: '50px'
     })
-    wrapper.vm.offsetVal = 100
+
+    wrapper.vm.offsetTop = 100
     await flushPromises()
     expectHaveStyle(wrapper.get('.el-message'), {
       top: '100px'
@@ -223,7 +226,7 @@ describe('Message.vue', () => {
       }
     })
 
-    wrapper.get('.el-message').trigger('mouseenter')
+    wrapper.find('.el-message').trigger('mouseenter')
     jest.runTimersToTime(1000)
     expect(wrapper.emitted('close')).toBeFalsy()
   })

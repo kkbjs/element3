@@ -242,3 +242,11 @@ export function objToArray(obj) {
   }
   return isEmpty(obj) ? [] : [obj]
 }
+
+export function getRefInstance(instance, ref) {
+  let refs = instance.refs[ref]
+
+  refs = Array.isArray(refs) ? refs : [refs]
+
+  return refs.map((ref) => ref.$)
+}
