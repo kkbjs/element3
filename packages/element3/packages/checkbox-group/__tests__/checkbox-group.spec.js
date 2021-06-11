@@ -1,363 +1,252 @@
+import CheckboxGroup from '../CheckboxGroup'
 import Checkbox from '../../checkbox/Checkbox'
 import CheckboxButton from '../../checkbox-button/CheckboxButton'
-import CheckboxGroup from '../CheckboxGroup'
 import { mount } from '@vue/test-utils'
-import { ref, h, nextTick } from 'vue'
+import { h, ref } from 'vue'
 
-describe('CheckboxGroup.vue and Checkbox.vue', () => {
-  describe('props', () => {
-    it('border', async () => {
+describe('CheckboxGroup.vue', () => {
+  test('support default slot', () => {
+    const text = 'welcome'
+    const wrapper = mount(CheckboxGroup, {
+      slots: { default: text }
+    })
+
+    expect(wrapper.text()).toBe(text)
+  })
+
+  test('props.modelValue', async () => {
+    const values = ref(['one'])
+    const wrapper = mount(CheckboxGroup, {
+      props: {
+        modelValue: values,
+        'onUpdate:modelValue': function (newValue) {
+          values.value = newValue
+        }
+      },
+      slots: {
+        default: ['two'].map((label) => h(Checkbox, { label }))
+      }
+    })
+
+    await wrapper
+      .findComponent({ name: 'ElCheckbox' })
+      .get('input')
+      .trigger('click')
+
+    expect(values.value).toEqual(['one', 'two'])
+  })
+
+  test('emit.change', async () => {
+    jest.useFakeTimers()
+    let changeModel
+    const onChange = (newChangeModel) => {
+      changeModel = newChangeModel
+    }
+
+    const values = ref(['A', 'B', 'C'])
+    const wrapper = mount(CheckboxGroup, {
+      props: {
+        modelValue: values,
+        onChange
+      },
+      slots: {
+        default: ['A', 'B', 'C', 'D'].map((label) => h(Checkbox, { label }))
+      }
+    })
+
+    await wrapper
+      .findAllComponents({ name: 'ElCheckbox' })[0]
+      .get('input')
+      .trigger('change')
+
+    await jest.runAllTicks()
+    expect(changeModel).toStrictEqual(['A', 'B', 'C'])
+  })
+
+  test('props.size', async () => {
+    const wrapper = mount(CheckboxGroup, {
+      props: { border: true },
+      slots: { default: ['A'].map((label) => h(Checkbox, { label })) }
+    })
+
+    await wrapper.setProps({ size: 'mini' })
+    expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
+      `el-checkbox--mini`
+    )
+
+    await wrapper.setProps({ size: 'small' })
+    expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
+      `el-checkbox--small`
+    )
+
+    await wrapper.setProps({ size: 'medium' })
+    expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
+      `el-checkbox--medium`
+    )
+  })
+
+  test('props.disabled', async () => {
+    const wrapper = mount(CheckboxGroup, {
+      slots: { default: ['A', 'B'].map((label) => h(Checkbox, { label })) }
+    })
+
+    await wrapper.setProps({ disabled: true })
+    expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
+      `is-disabled`
+    )
+
+    await wrapper.setProps({ disabled: false })
+    expect(
+      wrapper.findComponent({ name: 'ElCheckbox' }).classes()
+    ).not.toContain(`is-disabled`)
+  })
+
+  test('props.border', async () => {
+    const wrapper = mount(CheckboxGroup, {
+      slots: { default: ['A', 'B'].map((label) => h(Checkbox, { label })) }
+    })
+
+    await wrapper.setProps({ border: true })
+    expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
+      'is-bordered'
+    )
+
+    await wrapper.setProps({ border: false })
+    expect(
+      wrapper.findComponent({ name: 'ElCheckbox' }).classes()
+    ).not.toContain('is-bordered')
+  })
+
+  describe('props.min', () => {
+    const values = ref(['A', 'B'])
+    test('the selected number is less than or equal to min', async () => {
       const wrapper = mount(CheckboxGroup, {
-        props: {
-          border: true
-        },
+        props: { modelValue: values },
         slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
+          default: ['A', 'B', 'C', 'D'].map((label) => h(Checkbox, { label }))
         }
       })
+
+      await wrapper.setProps({ min: 2 })
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[0].classes()
-      ).toContain('is-bordered')
+      ).toContain('is-disabled')
+
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[1].classes()
-      ).toContain('is-bordered')
+      ).toContain('is-disabled')
+
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[2].classes()
-      ).toContain('is-bordered')
+      ).not.toContain('is-disabled')
+
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[3].classes()
+      ).not.toContain('is-disabled')
     })
 
-    it('disabled', async () => {
+    test('the selected number is greater than min', async () => {
       const wrapper = mount(CheckboxGroup, {
-        props: {
-          disabled: true
-        },
+        props: { modelValue: values },
         slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
+          default: ['A', 'B', 'C', 'D'].map((label) => h(Checkbox, { label }))
         }
       })
+
+      await wrapper.setProps({ min: 1 })
+
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[0].classes()
+      ).not.toContain('is-disabled')
+
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[1].classes()
+      ).not.toContain('is-disabled')
+
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[2].classes()
+      ).not.toContain('is-disabled')
+
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[3].classes()
+      ).not.toContain('is-disabled')
+    })
+  })
+
+  describe('props.max', () => {
+    test('the selected quantity is equal to max', async () => {
+      const values = ref(['B', 'D'])
+      const wrapper = mount(CheckboxGroup, {
+        props: { modelValue: values },
+        slots: {
+          default: ['A', 'B', 'C', 'D'].map((label) => h(Checkbox, { label }))
+        }
+      })
+
+      await wrapper.setProps({ max: 2 })
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[0].classes()
       ).toContain('is-disabled')
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[1].classes()
-      ).toContain('is-disabled')
+      ).not.toContain('is-disabled')
       expect(
         wrapper.findAllComponents({ name: 'ElCheckbox' })[2].classes()
       ).toContain('is-disabled')
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[3].classes()
+      ).not.toContain('is-disabled')
     })
 
-    it('size', async () => {
+    test('the selected quantity is less than max', async () => {
+      const values = ref(['B'])
       const wrapper = mount(CheckboxGroup, {
-        props: {
-          border: true
-        },
+        props: { modelValue: values },
         slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
+          default: ['A', 'B', 'C', 'D'].map((label) => h(Checkbox, { label }))
         }
       })
 
-      await wrapper.setProps({ size: 'mini' })
-      expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
-        'el-checkbox--mini'
-      )
-      await wrapper.setProps({ size: 'small' })
-      expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
-        'el-checkbox--small'
-      )
-      await wrapper.setProps({ size: 'medium' })
-      expect(wrapper.findComponent({ name: 'ElCheckbox' }).classes()).toContain(
-        'el-checkbox--medium'
-      )
-    })
-
-    it('modelValue/vModel', async () => {
-      const modelValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
-        }
-      })
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[0]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[1]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A', 'B'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[2]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A', 'B', 'C'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[0]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['B', 'C'])
-    })
-
-    it('sub checkbox checked', async () => {
-      const modelValue = ref([])
-      mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) =>
-            h(Checkbox, { label, checked: label === 'A' })
-          )
-        }
-      })
-
-      expect(modelValue.value).toStrictEqual(['A'])
-    })
-
-    it('min and max', async () => {
-      const modelValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          min: 1,
-          max: 2,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
-        }
-      })
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[0]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(1)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[1]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(2)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[2]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(2)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[1]
-        .trigger('click')
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[0]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(1)
+      await wrapper.setProps({ max: 2 })
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[0].classes()
+      ).not.toContain('is-disabled')
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[1].classes()
+      ).not.toContain('is-disabled')
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[2].classes()
+      ).not.toContain('is-disabled')
+      expect(
+        wrapper.findAllComponents({ name: 'ElCheckbox' })[3].classes()
+      ).not.toContain('is-disabled')
     })
   })
 
-  describe('event', () => {
-    it('change', async () => {
-      const modelValue = ref([])
-      const changeValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          },
-          onChange(v) {
-            changeValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(Checkbox, { label }))
-        }
-      })
-      await wrapper
-        .findAllComponents({ name: 'ElCheckbox' })[2]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['C'])
-      await nextTick()
-      expect(changeValue.value).toStrictEqual(['C'])
-    })
-  })
-})
+  test('custom select style', async () => {
+    const textColor = 'red'
+    const fill = 'green'
+    const value = ['A', 'C']
+    const result = `box-shadow: -1px 0 0 0 ${fill}; background-color: ${fill}; border-color: ${fill}; color: ${textColor};`
 
-describe('CheckboxGroup.vue and CheckboxButton.vue', () => {
-  describe('props', () => {
-    it('disabled', async () => {
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          disabled: true
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(CheckboxButton, { label }))
-        }
-      })
-      expect(
-        wrapper.findAllComponents({ name: 'ElCheckboxButton' })[0].classes()
-      ).toContain('is-disabled')
-      expect(
-        wrapper.findAllComponents({ name: 'ElCheckboxButton' })[1].classes()
-      ).toContain('is-disabled')
-      expect(
-        wrapper.findAllComponents({ name: 'ElCheckboxButton' })[2].classes()
-      ).toContain('is-disabled')
+    const wrapper = mount(CheckboxGroup, {
+      props: {
+        modelValue: value
+      },
+      slots: {
+        default: ['A', 'B', 'C', 'D'].map((label) =>
+          h(CheckboxButton, { label })
+        )
+      }
     })
 
-    it('size', async () => {
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          border: true
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(CheckboxButton, { label }))
-        }
-      })
-
-      await wrapper.setProps({ size: 'mini' })
-      expect(
-        wrapper.findComponent({ name: 'ElCheckboxButton' }).classes()
-      ).toContain('el-checkbox-button--mini')
-      await wrapper.setProps({ size: 'small' })
-      expect(
-        wrapper.findComponent({ name: 'ElCheckboxButton' }).classes()
-      ).toContain('el-checkbox-button--small')
-      await wrapper.setProps({ size: 'medium' })
-      expect(
-        wrapper.findComponent({ name: 'ElCheckboxButton' }).classes()
-      ).toContain('el-checkbox-button--medium')
-    })
-
-    it('modelValue/vModel', async () => {
-      const modelValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(CheckboxButton, { label }))
-        }
-      })
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[0]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[1]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A', 'B'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[2]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['A', 'B', 'C'])
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[0]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['B', 'C'])
-    })
-
-    it('sub checkbox checked', async () => {
-      const modelValue = ref([])
-      mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) =>
-            h(CheckboxButton, { label, checked: label === 'A' })
-          )
-        }
-      })
-
-      expect(modelValue.value).toStrictEqual(['A'])
-    })
-
-    it('min and max', async () => {
-      const modelValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          min: 1,
-          max: 2,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(CheckboxButton, { label }))
-        }
-      })
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[0]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(1)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[1]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(2)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[2]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(2)
-
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[1]
-        .trigger('click')
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[0]
-        .trigger('click')
-      expect(modelValue.value).toHaveLength(1)
-    })
-  })
-
-  describe('event', () => {
-    it('change', async () => {
-      const modelValue = ref([])
-      const changeValue = ref([])
-      const wrapper = mount(CheckboxGroup, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          },
-          onChange(v) {
-            changeValue.value = v
-          }
-        },
-        slots: {
-          default: ['A', 'B', 'C'].map((label) => h(CheckboxButton, { label }))
-        }
-      })
-      await wrapper
-        .findAllComponents({ name: 'ElCheckboxButton' })[2]
-        .trigger('click')
-      expect(modelValue.value).toStrictEqual(['C'])
-      await nextTick()
-      expect(changeValue.value).toStrictEqual(['C'])
-    })
+    await wrapper.setProps({ 'text-color': textColor, fill })
+    const components = wrapper.findAllComponents(CheckboxButton)
+    expect(
+      components[0].find('.el-checkbox-button__inner').attributes().style
+    ).toBe(result)
+    expect(
+      components[2].find('.el-checkbox-button__inner').attributes().style
+    ).toBe(result)
   })
 })

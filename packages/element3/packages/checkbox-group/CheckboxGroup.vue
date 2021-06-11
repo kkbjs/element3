@@ -6,37 +6,13 @@
 
 <script>
 import { useEmitter } from '../../src/composables/emitter'
-import { provide, getCurrentInstance, computed, inject } from 'vue'
+import { provide, getCurrentInstance } from 'vue'
 export default {
   name: 'ElCheckboxGroup',
-
-  props: {
-    modelValue: Array,
-    disabled: Boolean,
-    min: Number,
-    max: Number,
-    size: String,
-    fill: String,
-    textColor: String,
-    border: Boolean
-  },
-
   emits: ['update:modelValue', 'change'],
-
   setup(props, { emit }) {
-    const elForm = inject('elForm', { props: {}, ctx: {} })
-    const elFormItem = inject('elFormItem', {})
-    provide('elCheckboxGroup', getCurrentInstance())
-
+    const instance = getCurrentInstance()
     const { dispatch, on } = useEmitter()
-
-    const checkboxGroupSize = computed(() => {
-      return props.size || elFormItem.elFormItemSize
-    })
-
-    const checkboxGroupDisabled = computed(() => {
-      return props.disabled || elForm.disabled
-    })
 
     on('update:modelValue', (v) => {
       emit('update:modelValue', v)
@@ -47,10 +23,23 @@ export default {
       emit('change', v)
     })
 
-    return {
-      checkboxGroupSize,
-      checkboxGroupDisabled
-    }
+    provide('elCheckboxGroup', instance)
+  },
+  props: {
+    modelValue: Array,
+    size: {
+      type: String,
+      validator: (val) => {
+        if (val === '') return true
+        return ['medium', 'small', 'mini'].includes(val)
+      }
+    },
+    border: Boolean,
+    disabled: Boolean,
+    min: Number,
+    max: Number,
+    textColor: String,
+    fill: String
   }
 }
 </script>

@@ -1,182 +1,312 @@
-import Checkbox from '../Checkbox.vue'
+import Checkbox from '../Checkbox'
 import { mount } from '@vue/test-utils'
-import { ref, nextTick } from 'vue'
+import { ref, reactive, nextTick } from 'vue'
+import { setupGlobalOptions } from '../../../src/composables/globalConfig'
 
 describe('Checkbox.vue', () => {
-  describe('props', () => {
-    it('vModel modelValue is boolean', async () => {
-      const modelValue = ref(true)
-      const wrapper = mount(Checkbox, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        }
-      })
-
-      expect(wrapper.props('modelValue')).toBe(true)
-      await nextTick()
-      await wrapper.trigger('click')
-      expect(modelValue.value).toBe(false)
+  test('default slot', () => {
+    const content = 'an apple'
+    const wrapper = mount(Checkbox, {
+      slots: { default: content }
     })
 
-    it('true-label and false-label', async () => {
-      const modelValue = ref('真')
-      const wrapper = mount(Checkbox, {
-        props: {
-          modelValue,
-          trueLabel: '真',
-          falseLabel: '假',
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        }
-      })
+    expect(wrapper.find('.el-checkbox__label').text()).toBe(content)
+  })
 
-      expect(wrapper.props('modelValue')).toBe('真')
-      await nextTick()
-      await wrapper.trigger('click')
-      expect(modelValue.value).toBe('假')
+  test('label', () => {
+    const label = 'two apples'
+    const wrapper = mount(Checkbox, {
+      props: { label }
     })
 
-    it('disabled', async () => {
-      const modelValue = ref(true)
-      const wrapper = mount(Checkbox, {
-        props: {
-          modelValue,
-          disabled: true,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          }
-        }
-      })
-      expect(wrapper.classes()).toContain('is-disabled')
-      expect(wrapper.props('modelValue')).toBe(true)
-      await nextTick()
-      await wrapper.trigger('click')
-      expect(modelValue.value).toBe(true)
+    expect(wrapper.find('.el-checkbox__label').text()).toBe(label)
+  })
+
+  test('slot and label priority', () => {
+    const content = 'an apple'
+    const label = 'twp apples'
+    const wrapper = mount(Checkbox, {
+      slots: { default: content },
+      props: { label }
     })
 
-    it('border', async () => {
-      const wrapper = mount(Checkbox, {
-        props: {
-          border: true
+    expect(wrapper.find('.el-checkbox__label').text()).toBe(content)
+  })
+
+  test('no label and default slot', () => {
+    const wrapper = mount(Checkbox, {
+      modelValue: ref(true)
+    })
+
+    expect(wrapper.find('.el-checkbox__label').exists()).toBe(false)
+  })
+
+  test('update:modelValue', async () => {
+    const value = ref(false)
+    const wrapper = mount(Checkbox, {
+      props: {
+        modelValue: value,
+        'onUpdate:modelValue': function (newModelValue) {
+          value.value = newModelValue
         }
-      })
+      }
+    })
+
+    await wrapper.get('input').trigger('click')
+    expect(wrapper.emitted()).toHaveProperty('update:modelValue')
+    expect(wrapper.emitted()['update:modelValue'][0][0]).toBeTruthy()
+    await wrapper.get('input').trigger('click')
+    expect(wrapper.emitted()['update:modelValue'][0][1]).toBeFalsy()
+  })
+
+  describe('border', () => {
+    test('set border props', async () => {
+      const wrapper = mount(Checkbox, {})
+
+      expect(wrapper.classes()).not.toContain('is-bordered')
+      await wrapper.setProps({ border: true })
       expect(wrapper.classes()).toContain('is-bordered')
     })
 
-    it('indeterminate', async () => {
+    test('by elCheckboxGroup.border', () => {
       const wrapper = mount(Checkbox, {
-        props: {
-          indeterminate: true
-        }
-      })
-      expect(wrapper.findAll('.is-indeterminate')).toHaveLength(1)
-    })
-
-    it('size', async () => {
-      const wrapper = mount(Checkbox, {
-        props: {
-          border: true
-        }
-      })
-      await wrapper.setProps({ size: 'mini' })
-      expect(wrapper.classes()).toContain('el-checkbox--mini')
-      await wrapper.setProps({ size: 'small' })
-      expect(wrapper.classes()).toContain('el-checkbox--small')
-      await wrapper.setProps({ size: 'medium' })
-      expect(wrapper.classes()).toContain('el-checkbox--medium')
-    })
-
-    it('name', async () => {
-      const wrapper = mount(Checkbox, {
-        props: {
-          name: 'checkbox1'
-        }
-      })
-      expect(wrapper.find('input[type=checkbox]').attributes('name')).toBe(
-        'checkbox1'
-      )
-    })
-
-    it('vModel modelValue is array', async () => {
-      const modelValue = ref([])
-      const wrappers = []
-      wrappers.push(
-        mount(Checkbox, {
-          props: {
-            label: '选项A',
-            modelValue,
-            'onUpdate:modelValue'(v) {
-              modelValue.value = v
-            }
-          }
-        })
-      )
-
-      wrappers.push(
-        mount(Checkbox, {
-          props: {
-            label: '选项B',
-            modelValue,
-            'onUpdate:modelValue'(v) {
-              modelValue.value = v
-            }
-          }
-        })
-      )
-
-      await nextTick()
-      await wrappers[0].trigger('click')
-      expect(modelValue.value).toContain('选项A')
-      await nextTick()
-      await wrappers[1].trigger('click')
-      expect(modelValue.value).toStrictEqual(['选项A', '选项B'])
-      await nextTick()
-      await wrappers[1].trigger('click')
-      expect(modelValue.value).toContain('选项A')
-    })
-
-    it('checked', async () => {
-      const modelValue = ref(true)
-      const wrapper = mount(Checkbox, {
-        props: {
-          modelValue,
-          checked: false,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
+        global: {
+          provide: {
+            elCheckboxGroup: reactive({ proxy: { border: true } })
           }
         }
       })
 
-      await nextTick()
-      expect(wrapper.props('modelValue')).toBe(false)
+      expect(wrapper.classes()).toContain('is-bordered')
     })
   })
 
-  describe('event', () => {
-    it('change', async () => {
-      const modelValue = ref(true)
-      const changeValue = ref(true)
+  describe('size', () => {
+    test('when border property does not exist, setting the size property is invalid', () => {
       const wrapper = mount(Checkbox, {
-        props: {
-          modelValue,
-          'onUpdate:modelValue'(v) {
-            modelValue.value = v
-          },
-          onChange(v) {
-            changeValue.value = v
+        props: { size: 'mini' }
+      })
+
+      expect(wrapper.classes()).not.toContain('el-checkbox--mini')
+    })
+
+    test('set border and size at the same time', async () => {
+      const wrapper = mount(Checkbox, {
+        props: { size: 'mini' }
+      })
+
+      await wrapper.setProps({ border: true })
+      expect(wrapper.classes()).toContain('el-checkbox--mini')
+    })
+
+    test('by elCheckboxGroup.size', async () => {
+      const wrapper = mount(Checkbox, {
+        global: {
+          provide: {
+            elCheckboxGroup: reactive({ proxy: { size: 'mini' } })
           }
         }
       })
 
-      await nextTick()
-      await wrapper.trigger('click')
-      await nextTick()
-      expect(modelValue.value).toBe(false)
-      expect(changeValue.value).toBe(false)
+      await wrapper.setProps({ border: true })
+      expect(wrapper.classes()).toContain('el-checkbox--mini')
     })
+
+    test('by elFormItem.size', async () => {
+      const wrapper = mount(Checkbox, {
+        global: {
+          provide: {
+            elFormItem: reactive({ size: 'mini' })
+          }
+        }
+      })
+
+      await wrapper.setProps({ border: true })
+      expect(wrapper.classes()).toContain('el-checkbox--mini')
+    })
+
+    test('by global config', async () => {
+      const wrapper = mount(Checkbox, {
+        global: {
+          plugins: [setupGlobalOptions({ size: 'mini' })]
+        }
+      })
+
+      await wrapper.setProps({ border: true })
+      expect(wrapper.classes()).toContain('el-checkbox--mini')
+    })
+  })
+
+  describe('disabled', () => {
+    test('set disabled', async () => {
+      const wrapper = mount(Checkbox)
+
+      expect(wrapper.classes()).not.toContain('is-disabled')
+      await wrapper.setProps({ disabled: true })
+      expect(wrapper.classes()).toContain('is-disabled')
+    })
+
+    test('by elCheckboxGroup.disabled', () => {
+      const wrapper = mount(Checkbox, {
+        global: {
+          provide: {
+            elCheckboxGroup: reactive({ proxy: { disabled: true } })
+          }
+        }
+      })
+
+      expect(wrapper.classes()).toContain('is-disabled')
+    })
+
+    test('by elFormItem.disabled', () => {
+      const wrapper = mount(Checkbox, {
+        global: {
+          provide: {
+            elFormItem: reactive({ disabled: true })
+          }
+        }
+      })
+
+      expect(wrapper.classes()).toContain('is-disabled')
+    })
+  })
+
+  test('name', async () => {
+    const wrapper = mount(Checkbox)
+    await wrapper.setProps({ name: 'checkbox' })
+
+    expect(wrapper.get('input').attributes('name')).toBe('checkbox')
+  })
+
+  describe('true-label and false-label', () => {
+    test('true-label', async () => {
+      const value = ref(false)
+      const trueLabel = ref('yes')
+      const wrapper = mount(Checkbox, {
+        props: { modelValue: value, trueLabel }
+      })
+
+      await nextTick()
+      await wrapper.get('input').trigger('click')
+      expect(wrapper.emitted()['update:modelValue'][0][0]).toBe(trueLabel.value)
+    })
+
+    test('false-label', async () => {
+      const value = ref(true)
+      const falseLabel = ref('no')
+      const wrapper = mount(Checkbox, {
+        props: { modelValue: value, falseLabel }
+      })
+
+      await nextTick()
+      await wrapper.get('input').trigger('click')
+      expect(wrapper.emitted()['update:modelValue'][0][0]).toBe(
+        falseLabel.value
+      )
+    })
+  })
+
+  test('props.checked', async () => {
+    const wrapper = mount(Checkbox, {
+      props: { checked: true }
+    })
+
+    expect(wrapper.emitted()).toHaveProperty('update:modelValue')
+    expect(wrapper.emitted()['update:modelValue'][0][0]).toBeTruthy()
+  })
+
+  test('props.indeterminate', async () => {
+    const wrapper = mount(Checkbox)
+
+    expect(wrapper.get('.el-checkbox__input').classes()).not.toContain(
+      'is-indeterminate'
+    )
+    await wrapper.setProps({ indeterminate: true })
+    expect(wrapper.get('.el-checkbox__input').classes()).toContain(
+      'is-indeterminate'
+    )
+  })
+
+  describe('focus', () => {
+    test('checkbox is focused', async () => {
+      const wrapper = mount(Checkbox)
+
+      expect(wrapper.find('.el-checkbox__input').classes()).not.toContain(
+        'is-focus'
+      )
+      await wrapper.get('input').trigger('focus')
+      expect(wrapper.find('.el-checkbox__input').classes()).toContain(
+        'is-focus'
+      )
+    })
+
+    test('checkbox is not focused', async () => {
+      const wrapper = mount(Checkbox)
+
+      await wrapper.get('input').trigger('focus')
+      await wrapper.get('input').trigger('blur')
+      expect(wrapper.find('.el-checkbox__input').classes()).not.toContain(
+        'is-focus'
+      )
+    })
+  })
+
+  test('change', async () => {
+    const wrapper = mount(Checkbox)
+
+    await wrapper.setProps({ modelValue: ref(true) })
+    await wrapper.get('input').trigger('change')
+    expect(wrapper.emitted()).toHaveProperty('change')
+    expect(wrapper.emitted()['change'][0][0]).toBe(true)
+  })
+
+  test('parent provides modelValue', async () => {
+    const wrapper = mount(Checkbox, {
+      global: {
+        provide: {
+          elCheckboxGroup: reactive({ proxy: { modelValue: ['one', 'two'] } })
+        }
+      },
+      props: { label: 'one' }
+    })
+
+    await nextTick()
+    expect(wrapper.get('input').element.checked).toBe(true)
+  })
+
+  test('select when clicked', async () => {
+    const wrapper = mount(Checkbox, {
+      global: {
+        provide: {
+          elCheckboxGroup: reactive({
+            proxy: { modelValue: ['one'] }
+          })
+        }
+      },
+      props: {
+        label: 'two'
+      }
+    })
+
+    await wrapper.get('input').trigger('click')
+    expect(wrapper.get('input').element.checked).toBe(true)
+  })
+
+  test('when unchecked', async () => {
+    const wrapper = mount(Checkbox, {
+      global: {
+        provide: {
+          elCheckboxGroup: reactive({
+            proxy: { modelValue: ['one', 'two'] }
+          })
+        }
+      },
+      props: {
+        label: 'one'
+      }
+    })
+
+    await wrapper.get('input').trigger('click')
+    expect(wrapper.get('input').element.checked).toBe(false)
   })
 })

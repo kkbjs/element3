@@ -1,112 +1,132 @@
 <template>
   <label
-    class="el-checkbox"
     role="checkbox"
     :class="[
-      isBorder && checkboxSize ? 'el-checkbox--' + checkboxSize : '',
-      { 'is-disabled': isDisabled },
-      { 'is-bordered': isBorder },
-      { 'is-checked': isChecked }
+      'el-checkbox',
+      isBorder && checkboxSize ? `el-checkbox--${checkboxSize}` : '',
+      {
+        'is-bordered': isBorder,
+        'is-disabled': isDisabled,
+        'is-checked': isChecked
+      }
     ]"
     :id="id"
     :aria-checked="isChecked"
     :aria-disabled="isDisabled"
   >
     <span
-      class="el-checkbox__input"
-      :class="{
-        'is-disabled': isDisabled,
-        'is-checked': isChecked,
-        'is-indeterminate': indeterminate,
-        'is-focus': focus
-      }"
+      :class="[
+        'el-checkbox__input',
+        {
+          'is-disabled': isDisabled,
+          'is-checked': isChecked,
+          'is-indeterminate': indeterminate,
+          'is-focus': isFocus
+        }
+      ]"
       :tabindex="indeterminate ? 0 : false"
       :role="indeterminate ? 'checkbox' : false"
       :aria-checked="indeterminate ? 'mixed' : false"
     >
       <span class="el-checkbox__inner"></span>
       <input
+        v-if="trueLabel || falseLabel"
         class="el-checkbox__original"
-        type="checkbox"
-        ref="checkbox"
-        :aria-hidden="indeterminate ? 'true' : 'false'"
+        ref="checkboxRef"
         :name="name"
         :disabled="isDisabled"
         :true-value="trueLabel"
         :false-value="falseLabel"
+        type="checkbox"
+        @input="model = { checked: $event.target.checked }"
+        @focus="isFocus = true"
+        @blur="isFocus = false"
+        @change="changeHandle"
+        :aria-hidden="indeterminate ? 'true' : 'false'"
+      />
+      <input
+        v-else
+        class="el-checkbox__original"
+        ref="checkboxRef"
+        :name="name"
+        :disabled="isDisabled"
+        :true-value="trueLabel"
+        :false-value="falseLabel"
+        type="checkbox"
         :value="label"
-        @change="handleChange"
-        @input="model = { label, checked: $event.target.checked }"
-        @focus="focus = true"
-        @blur="focus = false"
+        @input="model = { checked: $event.target.checked }"
+        @focus="isFocus = true"
+        @blur="isFocus = false"
+        @change="changeHandle"
+        :aria-hidden="indeterminate ? 'true' : 'false'"
       />
     </span>
     <span class="el-checkbox__label" v-if="$slots.default || label">
-      <slot></slot>
-      <template v-if="!$slots.default">{{ label }}</template>
+      <slot>{{ label }}</slot>
     </span>
   </label>
 </template>
+
 <script>
-import { reactive, toRefs } from 'vue'
+import { ref, toRefs } from 'vue'
 import {
-  useModel,
-  useAria,
-  useCheckSelected,
   useSize,
-  useLimit,
   useDisabled,
+  useModel,
+  useInitSelect,
   useBorder
-} from './uses.js'
+} from './common'
+
 export default {
   name: 'ElCheckbox',
-
-  props: {
-    modelValue: [String, Number, Boolean, Symbol, Array],
-    label: [String, Number, Boolean, Symbol],
-    indeterminate: Boolean,
-    disabled: Boolean,
-    checked: Boolean,
-    name: String,
-    trueLabel: { type: [String, Number, Boolean], default: true },
-    falseLabel: { type: [String, Number, Boolean], default: false },
-    id: String /* 当indeterminate为真时，为controls提供相关连的checkbox的id，表明元素间的控制关系 */,
-    controls: String /* 当indeterminate为真时，为controls提供相关连的checkbox的id，表明元素间的控制关系 */,
-    border: Boolean,
-    size: String
-  },
-
   emits: ['update:modelValue', 'change'],
+  setup(props) {
+    const { border, size, disabled } = toRefs(props)
 
-  setup() {
-    const state = reactive({
-      focus: false
-    })
+    const isFocus = ref(false)
 
-    useAria()
-
-    const { model, handleChange } = useModel()
-
-    const isLimit = useLimit({ model })
-
-    const { isChecked, checkbox } = useCheckSelected({ model })
-
-    const checkboxSize = useSize()
-
-    const isDisabled = useDisabled({ isLimit })
-
-    const isBorder = useBorder()
+    const { changeHandle, model } = useModel()
+    const { checkboxRef, isChecked } = useInitSelect(model)
+    const { isBorder } = useBorder(border)
+    const { isDisabled } = useDisabled(disabled, isChecked)
+    const { checkboxSize } = useSize(size)
 
     return {
-      ...toRefs(state),
-      checkbox,
-      model,
-      isDisabled,
+      changeHandle,
+      isBorder,
       checkboxSize,
+      isDisabled,
+      checkboxRef,
       isChecked,
-      handleChange,
-      isBorder
+      isFocus,
+      model
     }
+  },
+  props: {
+    label: String,
+    modelValue: [String, Number, Boolean, Symbol, Array],
+    border: Boolean,
+    size: {
+      type: String,
+      validator: (val) => {
+        if (val === '') return true
+        return ['medium', 'small', 'mini'].includes(val)
+      }
+    },
+    disabled: Boolean,
+    name: String,
+    trueLabel: {
+      type: [String, Number, Boolean],
+      default: true
+    },
+    falseLabel: {
+      type: [String, Number, Boolean],
+      default: false
+    },
+    checked: Boolean,
+    indeterminate: Boolean,
+    id: String,
+    controls: String
   }
 }
 </script>
